@@ -9,4 +9,4 @@ driver.get('olavotweet.html')
 sleep(2)
 
 driver.save_screenshot('olavo1.png')
-
+# Test comment for git 
