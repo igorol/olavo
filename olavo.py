@@ -19,40 +19,42 @@ def publish_tweet(api, status, image = None):
     """
 
     if image:
-        api.update_with_media(filename=image, status=status)
+        api.update_with_media(filename='./screenshots/{}'.format(image), status=status)
     else:
         api.update_status(status=status)
 
 
-def screenshot_tweet(id_scr):
+def screenshot_tweet(id_str):
     """
 
     Saves a PNG screenshot of a tweet given by id_src
 
-    :param id_scr: Id of tweet in string format
+    :param id_str: Id of tweet in string format
     :return:
     """
     driver = webdriver.PhantomJS()
-    # driver.set_window_size(1024, 768)
-    driver.get('https://twitter.com/statuses/{}'.format(id_scr))
+    driver.set_window_size(1024, 768)
+    driver.get('https://twitter.com/statuses/{}?lang=pt-br'.format(id_str))
 
     # getting element containing the tweet body
-    # element = driver.find_element_by_class_name('js-original-tweet')
-    element = driver.find_element_by_class_name('permalink-tweet')
+    element = driver.find_element_by_class_name('permalink-tweet-container')
     location = element.location
     size = element.size
-    driver.save_screenshot('full_screenshot_{}.png'.format(id_scr))
+    driver.save_screenshot('./screenshots/full_screenshot_{}.png'.format(id_str))
     driver.quit()
 
     ## cropping the full screenshot around desired element
-    im = Image.open('full_screenshot_{}.png'.format(id_scr))  # uses PIL library to open image in memory
-    left = location['x'] + 160
-    top = location['y'] + 40
-    right = location['x'] + size['width'] + 140
-    bottom = location['y'] + size['height'] + 20
+    im = Image.open('./screenshots/full_screenshot_{}.png'.format(id_str))  # uses PIL library to open image in memory
+    left = location['x']
+    top = location['y']
+    right = location['x'] + size['width']
+    bottom = location['y'] + size['height']
     im = im.crop((left, top, right, bottom))  # defines crop points
-    im.save('screenshot_{}.png'.format(id_scr))
-    os.remove('full_screenshot_{}.png'.format(id_scr))
+    im.save('./screenshots/screenshot_{}.png'.format(id_str))
+    os.remove('./screenshots/full_screenshot_{}.png'.format(id_str))
+
+
+
 
 
 def retrieve_all_tweets(api, id_scr):
