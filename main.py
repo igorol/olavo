@@ -1,6 +1,6 @@
 import tweepy
 import yaml
-import os
+from apscheduler.schedulers.background import BackgroundScheduler
 from olavo import screenshot_tweet, publish_tweet
 from datetime import datetime
 
@@ -19,12 +19,7 @@ class MyStreamListener(tweepy.StreamListener):
 
 
 def start_api():
-    # consumer_key = os.environ['consumer_key']
-    # consumer_secret = os.environ['consumer_secret']
-    # access_token = os.environ['access_token']
-    # access_token_secret = os.environ['access_token_secret']
-
-    with open('info.yaml','r') as f:
+    with open('info.yaml', 'r') as f:
         doc = yaml.load(f)
 
     consumer_key = doc['tokens']['consumer_key']
@@ -45,13 +40,26 @@ def start_listener(api, user_id_str):
 
 
 if __name__ == '__main__':
-
+    ##
     ## Start main API object
+    ##
     API = start_api()
 
+    ##
     ## Start Stream Listener
-    ## Warning, it will perform all the actions defined in `MyStreamListener` class
+    ## (Warning, it will perform all the actions defined in `MyStreamListener` class)
+    ##
     start_listener(API, '575930104')
+
+    ##
+    ## Schedule important events
+    ##
+    sched = BackgroundScheduler()
+    sched.start()
+    sched.add_job(publish_tweet, 'cron', minute='14', hour='20',
+                  args=[API, 'Test scheduled update status {}'.format(datetime.now())])
+
+
 
 
     ## Other functions
