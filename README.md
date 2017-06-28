@@ -1,2 +1,4 @@
 # olavo
-Twitter test bot
+Twitter bot for keyword monitoring and statistics
+
+
