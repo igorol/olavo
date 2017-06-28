@@ -1,15 +1,22 @@
 from selenium import webdriver
 from PIL import Image
+
 import os
 import csv
 import re
+import string
+
+import pandas as pd
 
 
-def check_for_keyword(w, keyword='cu'):
-    word_list = re.split('\W+', w.lower())
+def check_for_keyword(text, keyword='cu'):
+    regex = re.compile('[%s]' % re.escape(string.punctuation))
+    stripped_text = regex.sub('', text).lower()
+    word_list = re.split('\W+', stripped_text)
     return keyword in word_list
 
-def publish_tweet(api, status, image = None):
+
+def publish_tweet(api, status, image=None):
     """
 
     :param api: API object
@@ -54,7 +61,21 @@ def screenshot_tweet(id_str):
     os.remove('./screenshots/full_screenshot_{}.png'.format(id_str))
 
 
+def extract_from_corpus(corpus_file, keyword='cu'):
+    corpus_df = pd.read_json(corpus_file)
+    corpus_df = corpus_df.sort_values(by=['created_at'])
 
+    selected_indices = []
+
+    idx = 0
+    for row in corpus_df.iterrows():
+        if check_for_keyword(row[1]['text'], keyword=keyword):
+            selected_indices.append(idx)
+        idx += 1
+
+    new_corpus = corpus_df.iloc[selected_indices]
+
+    return new_corpus
 
 
 def retrieve_all_tweets(api, id_scr):
@@ -76,7 +97,8 @@ def retrieve_all_tweets(api, id_scr):
         full_tweet_list.extend(new_tweets)
         oldest = full_tweet_list[-1].id - 1
 
-    out_tweets = [[tweet.id_str, tweet.created_at, tweet.text.encode("utf-8"), tweet.entities] for tweet in full_tweet_list]
+    out_tweets = [[tweet.id_str, tweet.created_at, tweet.text.encode("utf-8"), tweet.entities] for tweet in
+                  full_tweet_list]
 
     with open('{}_tweets.csv'.format(id_scr), 'wb') as f:
         writer = csv.writer(f)
