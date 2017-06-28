@@ -35,6 +35,20 @@ def start_listener(API, userId_str):
 
 
 if __name__ == '__main__':
+
+    ## Start main API object
     API = start_api()
-    start_listener(API, '575930104')
+
+    ## Start Stream Listener
+    ## Warning, it will perform all the actions defined in `MyStreamListener` class
+    # start_listener(API, '575930104')
+
+
+    ## Other functions
+
     # retrieve_all_tweets(API, '46822091')
+    status_id_str = '865178906013437954'
+    screenshot_tweet(status_id_str)
+    status_text = 'Test update status {}'.format(datetime.now())
+    image_name = 'screenshot_{}.png'.format(status_id_str)
+    publish_tweet(API, status=status_text, image=image_name)
