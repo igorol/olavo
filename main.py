@@ -1,4 +1,5 @@
 import tweepy
+import yaml
 import os
 from olavo import screenshot_tweet, publish_tweet
 from datetime import datetime
@@ -18,20 +19,29 @@ class MyStreamListener(tweepy.StreamListener):
 
 
 def start_api():
-    consumer_key = os.environ['consumer_key']
-    consumer_secret = os.environ['consumer_secret']
-    access_token = os.environ['access_token']
-    access_token_secret = os.environ['access_token_secret']
+    # consumer_key = os.environ['consumer_key']
+    # consumer_secret = os.environ['consumer_secret']
+    # access_token = os.environ['access_token']
+    # access_token_secret = os.environ['access_token_secret']
+
+    with open('info.yaml','r') as f:
+        doc = yaml.load(f)
+
+    consumer_key = doc['tokens']['consumer_key']
+    consumer_secret = doc['tokens']['consumer_secret']
+    access_token = doc['tokens']['access_token']
+    access_token_secret = doc['tokens']['access_token_secret']
+
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     api = tweepy.API(auth)
     return api
 
 
-def start_listener(API, userId_str):
+def start_listener(api, user_id_str):
     l = MyStreamListener()
-    streamer = tweepy.Stream(auth=API.auth, listener=l)
-    streamer.filter(follow=[userId_str], async=True)
+    streamer = tweepy.Stream(auth=api.auth, listener=l)
+    streamer.filter(follow=[user_id_str], async=True)
 
 
 if __name__ == '__main__':
@@ -41,14 +51,14 @@ if __name__ == '__main__':
 
     ## Start Stream Listener
     ## Warning, it will perform all the actions defined in `MyStreamListener` class
-    # start_listener(API, '575930104')
+    start_listener(API, '575930104')
 
 
     ## Other functions
 
     # retrieve_all_tweets(API, '46822091')
-    status_id_str = '865178906013437954'
-    screenshot_tweet(status_id_str)
-    status_text = 'Test update status {}'.format(datetime.now())
-    image_name = 'screenshot_{}.png'.format(status_id_str)
-    publish_tweet(API, status=status_text, image=image_name)
+    # status_id_str = '865178906013437954'
+    # screenshot_tweet(status_id_str)
+    # status_text = 'Test update status {}'.format(datetime.now())
+    # image_name = 'screenshot_{}.png'.format(status_id_str)
+    # publish_tweet(API, status=status_text, image=image_name)
