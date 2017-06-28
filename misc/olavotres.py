@@ -1,4 +1,3 @@
-# __author__ = 'igoro'
 
 import tweepy
 from tweepy import OAuthHandler
