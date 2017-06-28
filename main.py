@@ -1,15 +1,20 @@
 import tweepy
 import os
-from olavo import screenshot_tweet, retrieve_all_tweets
+from olavo import screenshot_tweet, publish_tweet
+from datetime import datetime
 
 
 class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
         print status.id_str
         screenshot_tweet(status.id_str)
+        status_text = 'Test update status {}'.format(datetime.now())
+        image_name = 'screenshot_{}.png'.format(status.id_str)
+        publish_tweet(API, status=status_text, image=image_name)
+        print 'status updated'
 
     def on_error(self, status_code):
-        print status_code
+        print 'Error : {}'.format(status_code)
 
 
 def start_api():
@@ -23,14 +28,13 @@ def start_api():
     return api
 
 
-
 def start_listener(API, userId_str):
     l = MyStreamListener()
     streamer = tweepy.Stream(auth=API.auth, listener=l)
     streamer.filter(follow=[userId_str], async=True)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     API = start_api()
-    # start_listener(API, '575930104')
-    retrieve_all_tweets(API, '46822091')
+    start_listener(API, '575930104')
+    # retrieve_all_tweets(API, '46822091')
