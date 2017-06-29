@@ -1,18 +1,21 @@
 import tweepy
 import yaml
-from apscheduler.schedulers.background import BackgroundScheduler
-from olavo import screenshot_tweet, publish_tweet
+# from apscheduler.schedulers.background import BackgroundScheduler
+from olavo import screenshot_tweet, publish_tweet, check_for_keyword
 from datetime import datetime
 
 
 class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
         print status.id_str
-        screenshot_tweet(status.id_str)
-        status_text = 'Test update status {}'.format(datetime.now())
-        image_name = 'screenshot_{}.png'.format(status.id_str)
-        publish_tweet(API, status=status_text, image=image_name)
-        print 'status updated'
+        print status.text
+        keyword = 'cu'
+        if check_for_keyword(status.text, keyword=keyword) and 'retweeted_status' not in status:
+            screenshot_tweet(status.id_str)
+            status_text = 'Olavo disse "{}"'.format(keyword)
+            image_name = 'screenshot_{}.png'.format(status.id_str)
+            publish_tweet(API, status=status_text, image=image_name)
+            print 'status updated'
 
     def on_error(self, status_code):
         print 'Error : {}'.format(status_code)
@@ -49,15 +52,16 @@ if __name__ == '__main__':
     ## Start Stream Listener
     ## (Warning, it will perform all the actions defined in `MyStreamListener` class)
     ##
-    start_listener(API, '575930104')
+    # start_listener(API, '575930104')
+    start_listener(API, '46822091')
 
     ##
     ## Schedule important events
     ##
-    sched = BackgroundScheduler()
-    sched.start()
-    sched.add_job(publish_tweet, 'cron', minute='14', hour='20',
-                  args=[API, 'Test scheduled update status {}'.format(datetime.now())])
+    # sched = BackgroundScheduler()
+    # sched.start()
+    # sched.add_job(publish_tweet, 'cron', minute='14', hour='20',
+    #               args=[API, 'Test scheduled update status {}'.format(datetime.now())])
 
 
 
