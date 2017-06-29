@@ -14,12 +14,14 @@ def remove_accents(input_str):
     return u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
 
 
-def check_for_keyword(text, keyword='cu'):
+def check_for_keyword(text, keywords=['cu', 'cus']):
+    keywords = [x.lower() for x in keywords]
     text = remove_accents(text)
     regex = re.compile('[%s]' % re.escape(string.punctuation))
     stripped_text = regex.sub('', text).lower()
     word_list = re.split('\W+', stripped_text)
-    return keyword.lower() in word_list
+    # return keyword.lower() in word_list
+    return any(word in word_list for word in keywords)
 
 
 def publish_tweet(api, status, image=None):
