@@ -13,7 +13,7 @@ def check_for_keyword(text, keyword='cu'):
     regex = re.compile('[%s]' % re.escape(string.punctuation))
     stripped_text = regex.sub('', text).lower()
     word_list = re.split('\W+', stripped_text)
-    return keyword in word_list
+    return keyword.lower() in word_list
 
 
 def publish_tweet(api, status, image=None):
