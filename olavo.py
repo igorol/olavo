@@ -1,6 +1,6 @@
 from selenium import webdriver
 from PIL import Image
-
+import unicodedata
 import os
 import csv
 import re
@@ -9,7 +9,13 @@ import string
 import pandas as pd
 
 
+def remove_accents(input_str):
+    nfkd_form = unicodedata.normalize('NFKD', input_str.decode("utf-8"))
+    return u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+
+
 def check_for_keyword(text, keyword='cu'):
+    text = remove_accents(text)
     regex = re.compile('[%s]' % re.escape(string.punctuation))
     stripped_text = regex.sub('', text).lower()
     word_list = re.split('\W+', stripped_text)
@@ -50,13 +56,13 @@ def screenshot_tweet(id_str):
     driver.save_screenshot('./screenshots/full_screenshot_{}.png'.format(id_str))
     driver.quit()
 
-    ## cropping the full screenshot around desired element
-    im = Image.open('./screenshots/full_screenshot_{}.png'.format(id_str))  # uses PIL library to open image in memory
+    # cropping the full screenshot around desired element
+    im = Image.open('./screenshots/full_screenshot_{}.png'.format(id_str))
     left = location['x']
     top = location['y']
     right = location['x'] + size['width']
     bottom = location['y'] + size['height']
-    im = im.crop((left, top, right, bottom))  # defines crop points
+    im = im.crop((left, top, right, bottom))
     im.save('./screenshots/screenshot_{}.png'.format(id_str))
     os.remove('./screenshots/full_screenshot_{}.png'.format(id_str))
 
