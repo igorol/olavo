@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from selenium import webdriver
 from PIL import Image
 from datetime import datetime
@@ -8,6 +9,7 @@ import csv
 import re
 import string
 
+import matplotlib.pyplot as plt
 import pandas as pd
 
 
@@ -75,7 +77,7 @@ def screenshot_tweet(id_str):
         return -1
 
 
-def extract_from_corpus(corpus_file, keywords=['cu']):
+def extract_from_corpus(corpus_file, keywords=['cu', 'cus'], return_full=False):
     corpus_df = pd.read_json(corpus_file)
     corpus_df = corpus_df.sort_values(by=['created_at'])
 
@@ -89,7 +91,10 @@ def extract_from_corpus(corpus_file, keywords=['cu']):
 
     new_corpus = corpus_df.iloc[selected_indices]
 
-    return new_corpus
+    if return_full:
+        return new_corpus, corpus_df
+    else:
+        return new_corpus
 
 
 def keyword_anniversary(corpus_file, keywords=['cu', 'cus'], save_png=True):
@@ -104,7 +109,8 @@ def keyword_anniversary(corpus_file, keywords=['cu', 'cus'], save_png=True):
             else:
                 yearword = 'anos'
 
-            tweet = " Tunel do tempo: ha {} {}, Olavo disse cu".format(anniversary, yearword, row['created_at'].strftime('%Y-%m-%d'))
+            tweet = "Túnel do tempo: há {} {}, Olavo disse cu.".format(anniversary, yearword,
+                                                                       row['created_at'].strftime('%Y-%m-%d'))
 
             if save_png:
                 filename = screenshot_tweet(str(row.id))
@@ -140,3 +146,44 @@ def retrieve_all_tweets(api, id_scr):
         writer = csv.writer(f)
         writer.writerow(["id", "created_at", "text", "entities"])
         writer.writerows(out_tweets)
+
+
+def keyword_per_month(keywords_df, all_df, plot=None):
+
+    kw_occurs_list = []
+    for index, row in keywords_df.iterrows():
+        kw_occurs_list.append(row['created_at'].strftime('%m'))
+
+    kw_per_month = []
+    for i in xrange(1, 13):
+        kw_per_month.append(kw_occurs_list.count(str(i).zfill(2)))
+
+    posts_occurs_list = []
+    for index, row in all_df.iterrows():
+        posts_occurs_list.append(row['created_at'].strftime('%m'))
+
+    posts_per_month = []
+    for i in xrange(1, 13):
+        posts_per_month.append(posts_occurs_list.count(str(i).zfill(2)))
+
+    month_list = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+
+    if plot:
+        plt.bar(xrange(len(month_list)), kw_per_month, align='center', alpha=0.5)
+        plt.xticks(xrange(len(month_list)), month_list)
+        plt.title(u'Tweets contendo "Cu" por mês')
+        plt.savefig("{}_1.png".format(plot))
+
+        plt.clf()
+
+        kw_frequency_per_month = [float(a) * 100 / b for a, b in zip(kw_per_month, posts_per_month)]
+        plt.bar(xrange(len(month_list)), kw_frequency_per_month, align='center', alpha=0.5, color='red')
+        plt.xticks(xrange(len(month_list)), month_list)
+        plt.title(u'% de Tweets contendo "Cu" por mês')
+        plt.savefig("{}_2.png".format(plot))
+
+
+
+
+
+
