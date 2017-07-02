@@ -1,21 +1,17 @@
 import tweepy
 import yaml
-# from apscheduler.schedulers.background import BackgroundScheduler
-from olavo import screenshot_tweet, publish_tweet, check_for_keyword
-from datetime import datetime
+import olavo
 
 
 class MyStreamListener(tweepy.StreamListener):
-    def __init__(self, id_str, keyword):
-        self.id_str = id_str
-        self.keyword = keyword
-
     def on_status(self, status):
-        if check_for_keyword(status.text, keyword=self.keyword) and 'retweeted_status' not in status.entities:
-            screenshot_tweet(status.id_str)
-            status_text = 'Olavo disse "{}"'.format(self.keyword)
+        print status.id_str
+        keyword = ['a']
+        if olavo.check_for_keyword(status.text, keywords=keyword) and 'retweeted_status' not in status.entities:
+            olavo.screenshot_tweet(status.id_str)
+            status_text = '{} disse "{}"!'.format(status.author.name, keyword[0])
             image_name = 'screenshot_{}.png'.format(status.id_str)
-            publish_tweet(API, status=status_text, image=image_name)
+            olavo.publish_tweet(API, status=status_text, image=image_name)
             print 'status updated'
 
     def on_error(self, status_code):
@@ -37,44 +33,12 @@ def start_api():
     return api
 
 
-def start_listener(api, user_id_str, keyword):
-    """
-
-    :param api:  Tweepy API object
-    :param user_id_str: Id of user you want to 'lister'
-    :param keyword: keyword you want to monitor
-    :return:
-    """
-    l = MyStreamListener(user_id_str, keyword)
+def start_listener(api, username):
+    l = MyStreamListener()
     streamer = tweepy.Stream(auth=api.auth, listener=l)
-    streamer.filter(follow=[user_id_str], async=True)
+    streamer.filter(follow=[username], async=True)
 
 
 if __name__ == '__main__':
-    ##
-    ## Start main API object
-    ##
     API = start_api()
-
-    ##
-    ## Start Stream Listener
-    ##
-    start_listener(API, user_id_str='46822091', keyword='cu')
-
-
-    ##
-    ## Schedule important events
-    ##
-    # sched = BackgroundScheduler()
-    # sched.start()
-    # sched.add_job(publish_tweet, 'cron', minute='14', hour='20',
-    #               args=[API, 'Test scheduled update status {}'.format(datetime.now())])
-
-    ## Other functions
-
-    # retrieve_all_tweets(API, '46822091')
-    # status_id_str = '865178906013437954'
-    # screenshot_tweet(status_id_str)
-    # status_text = 'Test update status {}'.format(datetime.now())
-    # image_name = 'screenshot_{}.png'.format(status_id_str)
-    # publish_tweet(API, status=status_text, image=image_name)
+    start_listener(API, '46822091')
