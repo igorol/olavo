@@ -42,3 +42,5 @@ def start_listener(api, username):
 if __name__ == '__main__':
     API = start_api()
     start_listener(API, '46822091')
+    # tweet, filename = olavo.keyword_anniversary('odecarvalho.json')
+    # olavo.publish_tweet(API, tweet, filename)
