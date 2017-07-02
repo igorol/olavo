@@ -1,5 +1,7 @@
 from selenium import webdriver
 from PIL import Image
+from datetime import datetime
+
 import unicodedata
 import os
 import csv
@@ -16,7 +18,7 @@ def remove_accents(input_str):
 
 def check_for_keyword(text, keywords=['cu', 'cus']):
     keywords = [x.lower() for x in keywords]
-    text = remove_accents(text)
+    text = remove_accents(text.encode('utf8'))
     regex = re.compile('[%s]' % re.escape(string.punctuation))
     stripped_text = regex.sub('', text).lower()
     word_list = re.split('\W+', stripped_text)
@@ -47,29 +49,33 @@ def screenshot_tweet(id_str):
     :param id_str: Id of tweet in string format
     :return:
     """
-    driver = webdriver.PhantomJS()
-    driver.set_window_size(1024, 768)
-    driver.get('https://twitter.com/statuses/{}?lang=pt-br'.format(id_str))
+    try:
+        driver = webdriver.PhantomJS()
+        driver.set_window_size(1024, 768)
+        driver.get('https://twitter.com/statuses/{}?lang=pt-br'.format(id_str))
 
-    # getting element containing the tweet body
-    element = driver.find_element_by_class_name('permalink-tweet-container')
-    location = element.location
-    size = element.size
-    driver.save_screenshot('./screenshots/full_screenshot_{}.png'.format(id_str))
-    driver.quit()
+        # getting element containing the tweet body
+        element = driver.find_element_by_class_name('permalink-tweet-container')
+        location = element.location
+        size = element.size
+        driver.save_screenshot('./screenshots/full_screenshot_{}.png'.format(id_str))
+        driver.quit()
 
-    # cropping the full screenshot around desired element
-    im = Image.open('./screenshots/full_screenshot_{}.png'.format(id_str))
-    left = location['x']
-    top = location['y']
-    right = location['x'] + size['width']
-    bottom = location['y'] + size['height']
-    im = im.crop((left, top, right, bottom))
-    im.save('./screenshots/screenshot_{}.png'.format(id_str))
-    os.remove('./screenshots/full_screenshot_{}.png'.format(id_str))
+        # cropping the full screenshot around desired element
+        im = Image.open('./screenshots/full_screenshot_{}.png'.format(id_str))
+        left = location['x']
+        top = location['y']
+        right = location['x'] + size['width']
+        bottom = location['y'] + size['height']
+        im = im.crop((left, top, right, bottom))
+        im.save('./screenshots/screenshot_{}.png'.format(id_str))
+        os.remove('./screenshots/full_screenshot_{}.png'.format(id_str))
+        return 'screenshot_{}.png'.format((id_str))
+    except:
+        return -1
 
 
-def extract_from_corpus(corpus_file, keyword='cu'):
+def extract_from_corpus(corpus_file, keywords=['cu']):
     corpus_df = pd.read_json(corpus_file)
     corpus_df = corpus_df.sort_values(by=['created_at'])
 
@@ -77,13 +83,35 @@ def extract_from_corpus(corpus_file, keyword='cu'):
 
     idx = 0
     for row in corpus_df.iterrows():
-        if check_for_keyword(row[1]['text'], keyword=keyword):
+        if check_for_keyword(row[1]['text'], keywords=keywords):
             selected_indices.append(idx)
         idx += 1
 
     new_corpus = corpus_df.iloc[selected_indices]
 
     return new_corpus
+
+
+def keyword_anniversary(corpus_file, keywords=['cu', 'cus'], save_png=True):
+    new = extract_from_corpus(corpus_file, keywords=keywords)
+    tweet = -1
+
+    for index, row in new.iterrows():
+        if datetime.now().strftime('%m%d') == row['created_at'].strftime('%m%d'):
+            anniversary = datetime.now().year - row['created_at'].year
+            if anniversary == 1:
+                yearword = 'ano'
+            else:
+                yearword = 'anos'
+
+            tweet = " Tunel do tempo: ha {} {}, Olavo disse cu".format(anniversary, yearword, row['created_at'].strftime('%Y-%m-%d'))
+
+            if save_png:
+                filename = screenshot_tweet(str(row.id))
+            else:
+                filename = -1
+
+            return tweet, filename
 
 
 def retrieve_all_tweets(api, id_scr):
